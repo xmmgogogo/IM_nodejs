@@ -1,5 +1,5 @@
 var net = require('net');
-var HeadBodyBuffers = require('./head_body_buffers').HeadBodyBuffers;
+var ExBuffer = require('./ExBuffer');
 
 var HOST = '0.0.0.0',
     PORT = 6969,
@@ -30,21 +30,15 @@ chatServer.on('connection', function(sock) {
     // 我们获得一个连接 - 该连接自动关联一个socket对象
     console.log('CONNECTED: ' + sock.remoteAddress + ':' + sock.remotePort);
 
-    //计算包buff
-    var hdb = new HeadBodyBuffers(4, packetLength);
-    hdb.on('packet', function (packet) {
-        var head = packet.slice(0, 4);
-        var body = packet.slice(4);
-        console.log("body:", body.toString(), body.length);
-        sock.write(packet);
-    });
+    //添加BUFF内存的事件监控
+    var exBuffer = new ExBuffer().ushortHead().littleEndian();
+    exBuffer.on('data', onReceivePackData);
 
     // 为这个socket实例添加一个"data"事件处理函数
     sock.on('data', function(data) {
         console.log('DATA ' + sock.remoteAddress + ': ' + data.toString());
 
-        //全服提示
-        broadcast(sock, data, clientList);
+        exBuffer.put(data);//只要收到数据就往ExBuffer里面put
     });
 
     // 为这个socket实例添加一个"close"事件处理函数
@@ -55,7 +49,8 @@ chatServer.on('connection', function(sock) {
     //如果客户端几分钟后，没请求就断开客户端的链接
     //客户端默认是65秒发一次心跳,一般情况下2分钟左右比较好
     sock.setTimeout(10 * 1000, function() {
-        sock.emit("c_close");
+        console.log('over time 10s.');
+//        sock.emit("c_close");
     });
 
     //踢出处理
@@ -71,6 +66,55 @@ chatServer.listen(PORT, HOST);
 
 console.log('Server listening on ' + HOST +':'+ PORT);
 
+/**
+ * 当服务端收到完整的包时
+ * @param buffer
+ */
+function onReceivePackData(buffer){
+    var receive_data = buffer.toString();
+    console.log("receive data: " + receive_data);
+
+    if(receive_data) {
+        try {
+            receive_data = JSON.parse(receive_data);
+            if(receive_data) //&&receive_data.hasOwnProperty("op")
+            {
+                //处理正常逻辑
+                global.log("work ok: " + receive_data);
+
+                //1, 系统消息
+                //2, 私聊消息
+                //3, 频道消息
+            } else {
+                global.log("error,receive_data is error2!");
+                sock.write({"ret" : 101});
+                sock.emit("c_close");
+            }
+        } catch(err) {
+            global.err("parse receive_data : " + err.stack);
+            sock.write({"ret" : 102});
+            sock.emit("c_close");
+        }
+    } else {
+        global.log("receive_data is error! ");
+        sock.write({"ret" : 103});
+        sock.emit("c_close");
+    }
+}
+
+//log
+var global = {
+  log : function(o) {
+      console.log(o);
+  },
+
+  error : function(o) {
+      console.log(o);
+  }
+};
+
+//清除过期客户端
+var cleanup = [];
 
 /**
  * 发送全服数据
@@ -78,36 +122,20 @@ console.log('Server listening on ' + HOST +':'+ PORT);
  * @param data
  * @param clientList
  */
-function broadcast(myClient, data, clientList) {
-    for(var i=0; i < clientList.length; i++) {
+function sendSystem(myClient, data, clientList) {
+    for(var i = 0; i < clientList.length; i++) {
         if(clientList[i] != myClient) {
-            clientList[i].write('You said: "' + data + '"');
+            if(clientList[i].writable) {
+                clientList[i].write('You said: "' + data + '"');
+            } else {
+                cleanup.push(clientList[i]);
+                clientList[i].destroy();
+            }
         }
     }
+
+    //del all dead client
+    for(var j = 0; j < cleanup.length; j++) {
+        clientList.splice(clientList.indexOf(cleanup[j]), 1);
+    }
 }
-
-function packetLength(data) {
-    return data.readUInt32BE(0);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//        function repeat(target, n) {
-//            return (new Array(n + 1)).join(target);
-//        }
-
-// 回发该数据，客户端将收到来自服务端的数据
-// var sendData = repeat('a', 11000) + '#';
-
-//        data = sendData.toString();

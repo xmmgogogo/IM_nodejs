@@ -58,7 +58,7 @@ function Connection(socket) {
 
     socket.on('data', function(data) {
         console.log('socket on: ' + data);
-        exBuffer.put(data);//只要收到数据就往ExBuffer里面put
+//        exBuffer.put(data);//只要收到数据就往ExBuffer里面put
     });
 
     //当服务端收到完整的包时
@@ -96,6 +96,7 @@ var client = net.connect(8124, function() {
     bodyBuf.write(data);
     client.write(bodyBuf);
 
+    client.write('123456');
 });
 
 //client.on('data', function(data) {
