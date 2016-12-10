@@ -11,7 +11,7 @@ var EventEmitter = require('events');
 * @param bufferLength 缓存区长度，默认512 byte
 */
 var ExBuffer = function (bufferLength) {
-	var self = this;
+    var self = this;
 //    process.EventEmitter.call(this);//继承事件类
     EventEmitter.call(this);//继承事件类
     var _headLen = 2;

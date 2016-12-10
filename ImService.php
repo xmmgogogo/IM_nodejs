@@ -176,6 +176,8 @@ class ImService
         // 生成包体
         $socketData .= pack("a" . $bodyLength, $jsonData);
 
+		$this->dump("socket_write bit data: len:{$length} |type:{$imType} --->" . $socketData);
+		
         // 发送消息
         if (false === @socket_write($this->socket, $socketData, $length + 2)) {
             $this->dump("socket_write() failed: reason: ".socket_strerror(socket_last_error()));
@@ -361,8 +363,8 @@ class ImService
      */
     private function dump($msg)
     {
-        if ($this->debug) {
+        // if ($this->debug) {
             echo "[" . date('Y-m-d H:i:s') . "] " . $msg . "<br />" . PHP_EOL;
-        }
+        // }
     }
 }

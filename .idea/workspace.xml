@@ -2,10 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6987c989-69ed-454e-8825-6b5c716dda1c" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/ExBuffer.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ExBuffer.js" afterPath="$PROJECT_DIR$/ExBuffer.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ImService.php" afterPath="$PROJECT_DIR$/ImService.php" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/im-server.js" afterPath="$PROJECT_DIR$/im-server.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test_extuff.js" afterPath="$PROJECT_DIR$/test_extuff.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="IM_nodejs.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -31,7 +30,7 @@
       <file leaf-file-name="im-server.js" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/im-server.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="33" column="59" selection-start="661" selection-end="673" vertical-scroll-proportion="0.36830357" vertical-offset="396" max-vertical-offset="3212">
+            <state line="198" column="20" selection-start="5301" selection-end="5301" vertical-scroll-proportion="0.7297921" vertical-offset="3724" max-vertical-offset="5104">
               <folding />
             </state>
           </provider>
@@ -40,7 +39,7 @@
       <file leaf-file-name="ExBuffer.js" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ExBuffer.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="34" column="19" selection-start="770" selection-end="780" vertical-scroll-proportion="-26.4" vertical-offset="0" max-vertical-offset="4466">
+            <state line="152" column="41" selection-start="4834" selection-end="4834" vertical-scroll-proportion="-15.48" vertical-offset="2869" max-vertical-offset="4466">
               <folding />
             </state>
           </provider>
@@ -124,10 +123,10 @@
   </component>
   <component name="PhpWorkspaceProjectConfiguration" backward_compatibility_performed="true" />
   <component name="ProjectFrameBounds">
-    <option name="x" value="1672" />
+    <option name="x" value="-8" />
     <option name="y" value="-8" />
-    <option name="width" value="1936" />
-    <option name="height" value="1056" />
+    <option name="width" value="1696" />
+    <option name="height" value="1026" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -323,7 +322,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1672" y="-8" width="1936" height="1056" extended-state="6" />
+    <frame x="-8" y="-8" width="1696" height="1026" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="File Transfer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.20043337" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -333,7 +332,7 @@
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Remote Host" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.12646745" sideWeight="0.7995666" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.12607099" sideWeight="0.7995666" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
@@ -487,14 +486,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/ExBuffer.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="34" column="19" selection-start="770" selection-end="780" vertical-scroll-proportion="-26.4" vertical-offset="0" max-vertical-offset="4466">
+        <state line="152" column="41" selection-start="4834" selection-end="4834" vertical-scroll-proportion="-15.48" vertical-offset="2869" max-vertical-offset="4466">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/im-server.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="33" column="59" selection-start="661" selection-end="673" vertical-scroll-proportion="0.36830357" vertical-offset="396" max-vertical-offset="3212">
+        <state line="198" column="20" selection-start="5301" selection-end="5301" vertical-scroll-proportion="0.7297921" vertical-offset="3724" max-vertical-offset="5104">
           <folding />
         </state>
       </provider>
