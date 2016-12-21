@@ -1,7 +1,8 @@
 var net = require('net'),
     crypto = require('crypto'),
-    ExBuffer = require('./ExBuffer'),
-    Sprintf = require('./node_modules/sprintf').sprintf;
+    ExBuffer = require('./node_modules/ExBuffer'),
+    Sprintf = require('./node_modules/sprintf').sprintf,
+    util = require("util");
 
 var HOST = '0.0.0.0',
     PORT = 3000,
@@ -64,7 +65,6 @@ var HOST = '0.0.0.0',
     // 缓存数据
     userMap                                 = {},    // 用户map {uid => {'UserId' => 'lmm', 'PlatformId':'101'}}
     groupList                               = {},    // 频道分组 {'group1' => [1,2,3], 'group2' : []}
-    cleanupList                             = [],    // 清除过期客户端
 
     // 系统返回类型、默认是0
     IM_RESPONSE_CODE_SUCCESS                = 0,    // 默认code值
@@ -86,6 +86,7 @@ var ConnectCount                    = 0,            // 当前客户端总连接�
     GroupMessageCount               = 0,            // 频道消息数
     systemRunStartTime              = Date.now()    // 启动时间
 ;
+
 
 /**
  * 添加用户进全服列表
@@ -112,9 +113,24 @@ function imLogin(myClientSocket, imType, body) {
     }
 
     //1, 若用户已经登录，则关闭以前的连接，以这次登录的为准 todo
-    if(getUserId(userId)) {
-        //1, 删掉当前USER表
-        //2, 删掉当前频道表
+    var oldUserInfo = getUserId(userId);
+    if(oldUserInfo) {
+        var oldConn = oldUserInfo['Conn'];
+        var oldGroupIds = oldUserInfo['GroupIds'];
+
+        //1, 删掉当前USER里面频道表
+        if(oldGroupIds) {
+            for(var i in oldGroupIds) {
+                if(oldGroupIds.hasOwnProperty(i)) {
+                    groupListDelUser(oldGroupIds[i], userId);
+                }
+            }
+        }
+
+        //2, 关闭老的链接
+        if(oldConn) {
+            SendError(oldConn, IM_ERROR_CODE_RELOGIN, "other login")
+        }
     }
 
     //2，写入新的UID
@@ -232,8 +248,7 @@ function serverResponseStatus(myClientSocket, imType, body, extra) {
         userId = body['uId'];
     }
 
-    console.log("======[serverResponseStatus]=======");
-    console.log(body);
+    console.log("[serverResponseStatus]: " + util.inspect(body));
 
     if(userId) {
         // 创建新token
@@ -321,6 +336,21 @@ function generateToken(userId) {
  */
 function getUserId(userId) {
     return userMap[userId];
+}
+
+/**
+ * 删除指定分组里面的用户ID
+ * @param groupId
+ * @param uId
+ */
+function groupListDelUser(groupId, uId) {
+    // 删除频道用户ID
+    if(groupList.hasOwnProperty(groupId)) {
+        var d_g_i = groupList[groupId].indexOf(uId);
+        if(d_g_i >= 0) {
+            delete groupList[groupId][d_g_i];
+        }
+    }
 }
 
 /**
@@ -439,8 +469,13 @@ function imChatBoardCast(myClientSocket, imType, fromType, body) {
 
     // 发送者信息
     var UserId = body['sendId'];
+    var senderInfo = {};
     if(userMap.hasOwnProperty(UserId)) {
-        var senderInfo = userMap[UserId];
+        senderInfo = userMap[UserId];
+    } else if(fromType == IM_FROM_TYPE_AI) {
+        //压力测试用
+        senderInfo = {UserId : UserId, PlatformId : UserId, PlatformName : 'AI' + UserId};
+        fromType = 0;
     } else {
         SendError(myClientSocket, IM_ERROR_CODE_USER_INFO, '');
         return;
@@ -451,20 +486,19 @@ function imChatBoardCast(myClientSocket, imType, fromType, body) {
     body["senderPlatformName"] = senderInfo.PlatformName;
     body["senderExtInfo"] = '';
 
-    global.log("============[World Send]============");
-    global.log(body);
+    global.log("[World Send]: " + util.inspect(body));
 
     // 生成完整包数据
     // 生成完整包数据
-    var data = VA_formatMsgHeader(imType, fromType, body);
+    var data = VA_formatMsgHeader(imType, 0, body);//todo 写死0
 
     // 遍历所有在线用户，发送消息
     for(var uId in userMap) {
         if(userMap.hasOwnProperty(uId)) {
             var Conn = userMap[uId]['Conn'];
-            //if(Conn.writable) {
+            if(Conn) {
                 Conn.write(data);
-            //}
+            }
         } else {
             global.log("hasOwnProperty error: " + uId);
         }
@@ -505,8 +539,7 @@ function imChatGroup(myClientSocket, imType, fromType, body) {
     body["senderPlatformName"] = senderInfo.PlatformName;
     body["senderExtInfo"] = '';
 
-    global.log("============[Group Send]============");
-    global.log(body);
+    global.log("[Group Send]: " + util.inspect(body));
 
     // 生成完整包数据
     // 生成完整包数据
@@ -519,9 +552,9 @@ function imChatGroup(myClientSocket, imType, fromType, body) {
             var sendUid = groupList[groupId][i];
             if(userMap[sendUid] !== undefined) {
                 var Conn = userMap[sendUid]['Conn'];
-                //if(Conn.writable) {
-                Conn.write(data);
-                //}
+                if(Conn) {
+                    Conn.write(data);
+                }
             }
         }
     }
@@ -553,8 +586,9 @@ function imChatPrivate(myClientSocket, imType, fromType, body) {
     if(userMap.hasOwnProperty(receiverId)) {
         var receiverInfo = userMap[receiverId];
     } else {
-        SendError(myClientSocket, IM_ERROR_CODE_USER_INFO, '');
-        return;
+        // 对方不在线，给发送方发送对方不在线的notice | IM_RESPONSE_CODE_RECEIVER_OFFLINE 应该返回成功
+        //SendError(myClientSocket, IM_ERROR_CODE_USER_INFO, '');
+        return IM_RESPONSE_CODE_RECEIVER_OFFLINE;
     }
 
     body["receiverId"] = receiverId;
@@ -575,8 +609,7 @@ function imChatPrivate(myClientSocket, imType, fromType, body) {
     body["senderPlatformName"] = senderInfo.PlatformName;
     body["senderExtInfo"] = senderInfo.ExtInfo;
 
-    global.log("============[Private Send]============");
-    global.log(body);
+    global.log("[Private Send]: " + util.inspect(body));
 
     // 生成完整包数据
     // 生成完整包数据
@@ -584,12 +617,12 @@ function imChatPrivate(myClientSocket, imType, fromType, body) {
 
     // 发送消息
     var Conn = userMap[receiverId]['Conn'];
-    //if(Conn.writable) {
-    Conn.write(data);
-    //}
+    if(Conn) {
+        Conn.write(data);
+    }
 
     // 发送成功状态
-    serverResponseStatus(myClientSocket, imType, body)
+    serverResponseStatus(myClientSocket, imType, body);
 }
 
 /**
@@ -637,18 +670,18 @@ function VA_formatMsgHeader(imType, fromType, data) {
 var global = {
     log : function(o) {
         console.log(o);
-        console.log('\n');
     },
 
     err : function(o) {
         console.log(o);
-        console.log('\n');
     }
 };
 
 // ---------------------socket服务器开始-----------------------------------------------
+
 // 创建一个TCP服务器实例，调用listen函数开始监听指定端口
 var chatServer = net.createServer();
+chatServer.setMaxListeners(0);
 
 chatServer.on('connection', function(sock) {
     //socket对象
@@ -673,10 +706,10 @@ chatServer.on('connection', function(sock) {
 
     //如果客户端几分钟后，没请求就断开客户端的链接
     //客户端默认是65秒发一次心跳,一般情况下2分钟左右比较好
-    sock.setTimeout(2 * 60 * 1000, function() {
-        //global.log('over time 120s.');
-        //sock.emit("server_close");
-    });
+    //sock.setTimeout(2 * 60 * 1000, function() {
+    //    //global.log('over time 120s.');
+    //    //sock.emit("server_close");
+    //});
 
     //错误处理
     sock.on("error", function(e){
@@ -712,12 +745,12 @@ chatServer.on('connection', function(sock) {
                 var imType = buffer.readUIntBE(0, IM_TYPE_SIZE);
 
                 //读取来源类型
-                var fromType = buffer.readUIntBE(IM_TYPE_SIZE, IM_HEADER_SIZE);
+                var fromType = buffer.readUIntBE(IM_TYPE_SIZE, IM_FROM_TYPE_SIZE);
 
                 // 读取协议内容
                 var body = receive_data.substr(IM_HEADER_SIZE);
 
-                global.log("Receive Data: imType:[" + imType + "], fromType:[" + fromType + "], body:[" + body + "]");
+                global.log("Receive Data: " + util.inspect(body));
 
                 //解开json对象
                 body = JSON.parse(body);
@@ -733,7 +766,7 @@ chatServer.on('connection', function(sock) {
                             break;
                         case IM_CHAT_BORADCAST:
                             //1, 系统消息(游戏)
-                            imChatBoardCast(sock, imType, IM_FROM_TYPE_USER, body);
+                            imChatBoardCast(sock, imType, fromType, body);
                             break;
                         case IM_CHAT_GROUP:
                             //2, 频道消息
